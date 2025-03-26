@@ -2,7 +2,7 @@ import easyAI as eai
 import numpy as np
 from easyAI import TwoPlayerGame
 import random
-import time  # Dodano moduł time
+import time
 
 class TicTacToe(TwoPlayerGame):
 
@@ -10,7 +10,7 @@ class TicTacToe(TwoPlayerGame):
         self.players = players
         self.board = [0 for i in range(9)]
         self.current_player = starting_player
-        self.probabilistic = probabilistic  # Dodano argument probabilistic
+        self.probabilistic = probabilistic
 
     def possible_moves(self):
         return [i + 1 for i, e in enumerate(self.board) if e == 0]
@@ -51,15 +51,13 @@ class TicTacToe(TwoPlayerGame):
     def play(self, decision_times):
         """Override the play method to add probabilistic skipping of moves and measure decision times."""
         while not self.is_over():
-            if self.probabilistic and random.random() < 0.2:  # 20% szans na pominięcie ruchu
+            if self.probabilistic and random.random() < 0.2:  #20% chance of skipping
                 self.switch_player()
                 continue
 
-            start_time = time.time()  # Start pomiaru czasu
+            start_time = time.time()
             move = self.players[self.current_player - 1].ask_move(self)
-            end_time = time.time()  # Koniec pomiaru czasu
-
-            # Zapisz czas decyzji dla aktualnego gracza
+            end_time = time.time()
             decision_times[self.current_player - 1].append(end_time - start_time)
 
             self.make_move(move)
@@ -83,11 +81,14 @@ def run_game(number_of_games=100, negamax_1=3, negamax_2=3, probabilistic=False,
     elif algorithm == "expectiminimax":
         ai1 = eai.AI_Player(ExpectiMinimax(negamax_1))
         ai2 = eai.AI_Player(ExpectiMinimax(negamax_2))
+    elif algorithm == "mixed":
+        ai1 = eai.AI_Player(eai.Negamax(negamax_1, win_score=win_score))
+        ai2 = eai.AI_Player(ExpectiMinimax(negamax_2))
     else:
         raise ValueError("Invalid algorithm. Choose 'negamax' or 'expectiminimax'.")
 
     results = {"AI 1 wins": 0, "AI 2 wins": 0, "Draws": 0}
-    decision_times = [[], []]  # Lista do przechowywania czasów decyzji dla obu graczy
+    decision_times = [[], []]  #decision times container
 
     for _ in range(number_of_games):
         game = TicTacToe([ai1, ai2], starting_player=random.choice([1, 2]), probabilistic=probabilistic)
@@ -101,7 +102,7 @@ def run_game(number_of_games=100, negamax_1=3, negamax_2=3, probabilistic=False,
         else:
             results["Draws"] += 1
 
-    # Oblicz średni czas decyzji dla obu graczy
+    #mean decision time
     avg_time_ai1 = sum(decision_times[0]) / len(decision_times[0]) if decision_times[0] else 0
     avg_time_ai2 = sum(decision_times[1]) / len(decision_times[1]) if decision_times[1] else 0
 
